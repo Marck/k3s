@@ -1,4 +1,4 @@
-# ansible-role-k3s
+# k3s
 
 Ansible role to install and configure a k3s cluster. Handles master setup, worker setup, firewall configuration, and RBAC user provisioning.
 
@@ -31,8 +31,12 @@ The `deploy-readwrite` ClusterRole covers:
 - **Namespaces**: get/list/watch/create (no delete)
 - **ServiceAccounts**: get/list/watch/create/update/patch
 - **Nodes & events**: read-only
+- **RBAC**: (Cluster)Roles and (Cluster)RoleBindings — full CRUD, bounded by Kubernetes
+  escalation prevention (can only grant permissions the role itself holds)
+- **Metrics**: metrics.k8s.io nodes/pods — read-only
+- **SealedSecrets**: bitnami.com sealedsecrets — full CRUD
 
-NOT granted: node management, PersistentVolumes, RBAC management (ClusterRoles/Bindings), cluster-level destructive operations.
+NOT granted: node management, PersistentVolumes, cluster-level destructive operations.
 
 ### Variables
 

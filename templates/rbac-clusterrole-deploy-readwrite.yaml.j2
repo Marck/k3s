@@ -70,3 +70,24 @@ rules:
       - nodes
       - events
     verbs: ["get", "list", "watch"]
+  # RBAC: manage chart-scoped (Cluster)Roles/Bindings (e.g. homepage's k8s widget SA).
+  # Kubernetes' escalation prevention still applies: only permissions this role
+  # already holds can be granted.
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources:
+      - roles
+      - rolebindings
+      - clusterroles
+      - clusterrolebindings
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Metrics: read node/pod usage (metrics-server) — needed to grant it to widget SAs
+  - apiGroups: ["metrics.k8s.io"]
+    resources:
+      - nodes
+      - pods
+    verbs: ["get", "list", "watch"]
+  # SealedSecrets: charts ship credentials as SealedSecret resources
+  - apiGroups: ["bitnami.com"]
+    resources:
+      - sealedsecrets
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
