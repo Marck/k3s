@@ -35,6 +35,7 @@ The `deploy-readwrite` ClusterRole covers:
   escalation prevention (can only grant permissions the role itself holds)
 - **Metrics**: metrics.k8s.io nodes/pods — read-only
 - **SealedSecrets**: bitnami.com sealedsecrets — full CRUD
+- **Certificates**: cert-manager.io certificates — full CRUD
 
 NOT granted: node management, PersistentVolumes, cluster-level destructive operations.
 

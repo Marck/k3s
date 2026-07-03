@@ -91,3 +91,8 @@ rules:
     resources:
       - sealedsecrets
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # cert-manager Certificates: charts declare per-namespace certs (e.g. mosquitto mqtts)
+  - apiGroups: ["cert-manager.io"]
+    resources:
+      - certificates
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
