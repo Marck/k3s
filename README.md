@@ -9,6 +9,7 @@ Ansible role to install and configure a k3s cluster. Handles master setup, worke
 | `setup_cluster_master.yaml`        | Bootstrap the first master node           |
 | `setup_cluster_worker.yaml`        | Join worker nodes to the cluster          |
 | `configure_firewall.yaml`          | Open required firewall ports              |
+| `configure_dns.yaml`               | Static public node DNS via nmcli (never the in-cluster AdGuard VIP — avoids the image-pull bootstrap deadlock; servers via `k3s_node_dns_servers`) |
 | `rpi_configure_boot_cmdline.yaml`  | Raspberry Pi boot config (cgroups)        |
 | `configure_rbac.yaml`              | Create scoped RBAC users with kubeconfigs |
 

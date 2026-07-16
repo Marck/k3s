@@ -1,17 +1,44 @@
 ---
+# Static public DNS on every node, independent of the in-cluster AdGuard VIP.
+#
+# The cluster hosts its own LAN DNS (AdGuard behind a kube-vip VIP). If the
+# nodes take that VIP as their DHCP-provided resolver, an AdGuard outage or
+# image upgrade leaves them unable to resolve container registries — so they
+# cannot pull the very image that would restore DNS (bootstrap deadlock).
+# Nodes therefore get static public resolvers and ignore DHCP-provided DNS.
+# Nothing on the nodes needs LAN names (NFS mounts are by IP for the same
+# reason).
+#
+# NetworkManager-based (Raspberry Pi OS Bookworm and the NUC). Changes are
+# applied with `nmcli device reapply` — NOT `connection down/up`: a link
+# bounce breaks kube-vip's interface watcher and can blackhole the DNS VIP
+# (see the adguard chart RUNBOOK).
 - block:
-  - name: rpi | Configure DNS
-    lineinfile:
-      path: /etc/dhcpcd.conf
-      line: 'static domain_name_servers=1.1.1.1 8.8.8.8'
-      state: present
-      insertafter: "EOF"
-    register: dns_change 
+  - name: all | Detect active ethernet connection
+    shell: |
+      set -o pipefail
+      nmcli -t -f NAME,DEVICE,TYPE connection show --active | awk -F: '$3 ~ /ethernet/ {print $1 ";" $2; exit}'
+    args:
+      executable: /bin/bash
+    register: nm_active
+    changed_when: false
+    failed_when: nm_active.stdout | length == 0
 
-  - name: rpi | Restart DHCP service
-    shell: sudo service dhcpcd restart
-    when: 
-      - dns_change.failed is false
-      - dns_change.changed is true
+  - name: all | Read current DNS configuration
+    shell: nmcli -g ipv4.dns,ipv4.ignore-auto-dns,ipv6.ignore-auto-dns connection show "{{ nm_active.stdout.split(';')[0] }}"
+    register: nm_dns
+    changed_when: false
+
+  - name: all | Set static DNS and ignore DHCP/RA-provided DNS
+    shell: >
+      nmcli connection modify "{{ nm_active.stdout.split(';')[0] }}"
+      ipv4.dns "{{ k3s_node_dns_servers | join(' ') }}"
+      ipv4.ignore-auto-dns yes
+      ipv6.ignore-auto-dns yes
+    when: nm_dns.stdout_lines != [(k3s_node_dns_servers | join(',')), 'yes', 'yes']
+    register: dns_change
+
+  - name: all | Apply without bouncing the link (keeps kube-vip healthy)
+    shell: nmcli device reapply "{{ nm_active.stdout.split(';')[1] }}"
+    when: dns_change is changed
   become: true
-  when: rpi is true

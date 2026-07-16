@@ -1,0 +1,7 @@
+---
+# Node-level DNS servers (tasks/configure_dns.yaml). Public resolvers only —
+# NEVER the in-cluster AdGuard VIP, or nodes cannot pull images while the
+# cluster's own DNS is down. Override in the playbook's group_vars if needed.
+k3s_node_dns_servers:
+  - 1.1.1.1
+  - 1.0.0.1
